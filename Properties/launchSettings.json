@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "svg-editor (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "svg-editor (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
