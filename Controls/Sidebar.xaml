@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="svg_editor.Controls.Sidebar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:svg_editor.Controls"
+    xmlns:models="using:svg_editor.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+	<UserControl.Resources>
+		<local:ShapeKindToGlyphConverter x:Key="ShapeGlyphConverter"/>
+	</UserControl.Resources>
+
+	<Grid Background="White">
+		<ListView SelectionMode="Single"
+				  x:Name="ShapesList"
+				  ItemsSource="{Binding Store.Shapes}"
+				  
+				  SelectionChanged="ShapesList_SelectionChanged"
+				  >
+			<ListView.ItemTemplate>
+				<DataTemplate x:DataType="models:Shape">
+					<StackPanel Orientation="Horizontal" Spacing="10" Padding="4">
+						<FontIcon Glyph="{Binding Kind, Converter={StaticResource ShapeGlyphConverter}}"/>
+
+						<TextBlock Text="{Binding Name}"/>
+					</StackPanel>
+				</DataTemplate>
+			</ListView.ItemTemplate>
+		</ListView>
+    </Grid>
+</UserControl>

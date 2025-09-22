@@ -11,6 +11,10 @@
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
-        </ResourceDictionary>
-    </Application.Resources>
+			<AcrylicBrush x:Key="CustomAcrylicBrush"
+        TintOpacity="0.14" TintLuminosityOpacity="0.1" />
+
+		</ResourceDictionary>
+		
+	</Application.Resources>
 </Application>
