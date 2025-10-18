@@ -51,7 +51,7 @@
 			<!-- Undo/Redo and Save/Load buttons -->
 			<StackPanel Spacing="8">
 				<Button Content="Загрузить демо" Command="{Binding LoadDemoCommand}" Padding="12,8"/>
-				<Button Content="Сохранить в SVG" Command="{Binding SaveSvgCommand}" Padding="12,8"/>
+				<Button Content="Сохранить в SVG" Click="Button_Click" Padding="12,8"/>
 				<StackPanel Orientation="Horizontal" Spacing="8">
 					<Button Content="Отменить" Command="{Binding UndoCommand}" Padding="8"/>
 					<Button Content="Повторить" Command="{Binding RedoCommand}" Padding="8"/>

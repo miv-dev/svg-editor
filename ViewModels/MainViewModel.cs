@@ -1,8 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Dispatching;
 using svg_editor.Models;
 using svg_editor.Services;
 using svg_editor.Services.Commands;
+using svg_editor.Utils;
+using svg_editor.Views.Controls;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -81,8 +84,8 @@ namespace svg_editor.ViewModels
             AppState.ResetTools();
         }
 
-        [RelayCommand]
-        private async void SaveSvg()
+
+        public String GetSvg()
         {
             var sb = new StringBuilder();
             sb.AppendLine($"""<svg xmlns="http://www.w3.org/2000/svg" width="{Store.CanvasWidth}" height="{Store.CanvasHeight}">""");
@@ -115,23 +118,8 @@ namespace svg_editor.ViewModels
 
             sb.AppendLine("</svg>");
 
-            // Open a Save File Picker
-            var picker = new FileSavePicker
-            {
-                SuggestedFileName = "scene",
-                DefaultFileExtension = ".svg",
-                SuggestedStartLocation = PickerLocationId.Desktop
-            };
-            picker.FileTypeChoices.Add("SVG Files", new List<string> { ".svg" });
-
-            // Show the Save File Dialog
-            var file = await picker.PickSaveFileAsync();
-
-            if (file != null)
-            {
-                // Write the content to the selected file
-                await FileIO.WriteTextAsync(file, sb.ToString());
-            }
+            return sb.ToString();
         }
+       
     }
 }
