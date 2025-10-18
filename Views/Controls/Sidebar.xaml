@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="svg_editor.Views.Controls.Sidebar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:svg_editor.Views.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:viewmodels="using:svg_editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:MainViewModel}"
+	mc:Ignorable="d">
+
+	<ScrollViewer>
+		<StackPanel Padding="12" Spacing="16">
+			<!-- Create New Document Button -->
+			<Button Content="Создать" 
+                    Command="{Binding NewDocumentCommand}"
+                    Padding="12,8"
+                    HorizontalAlignment="Stretch"/>
+
+			<!-- Editor Mode Buttons (View/Edit) -->
+			<Border CornerRadius="6" Padding="12" BorderBrush="#DDD" BorderThickness="1">
+				<StackPanel Spacing="8">
+					<TextBlock Text="Режим:" FontWeight="SemiBold"/>
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<Button Content="Просмотр" Command="{Binding SetModeViewCommand}" Padding="8"/>
+						<Button Content="Редактирование" Command="{Binding SetModeEditCommand}" Padding="8"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+
+			<!-- Shape Creation Section -->
+			<Border CornerRadius="6" Padding="12" BorderBrush="#DDD" BorderThickness="1">
+				<StackPanel Spacing="8">
+					<TextBlock Text="Создать фигуру:" FontWeight="SemiBold"/>
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<Button Content="■" Command="{Binding UseRectCommand}" Padding="8"/>
+						<Button Content="●" Command="{Binding UseEllipseCommand}" Padding="8"/>
+						<Button Content="▲" Command="{Binding UseTriangleCommand}" Padding="8"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+
+			<!-- Shape Properties Section (not editable yet) -->
+			<Border CornerRadius="6" Padding="12" BorderBrush="#DDD" BorderThickness="1">
+				<StackPanel Spacing="4">
+					<TextBlock Text="Размер:" FontWeight="SemiBold"/>
+					<TextBlock Text="{Binding Store.CanvasWidth}"/>
+					<TextBlock Text="{Binding Store.CanvasHeigh}"/>
+				</StackPanel>
+			</Border>
+
+			<!-- Undo/Redo and Save/Load buttons -->
+			<StackPanel Spacing="8">
+				<Button Content="Загрузить демо" Command="{Binding LoadDemoCommand}" Padding="12,8"/>
+				<Button Content="Сохранить в SVG" Command="{Binding SaveSvgCommand}" Padding="12,8"/>
+				<StackPanel Orientation="Horizontal" Spacing="8">
+					<Button Content="Отменить" Command="{Binding UndoCommand}" Padding="8"/>
+					<Button Content="Повторить" Command="{Binding RedoCommand}" Padding="8"/>
+				</StackPanel>
+			</StackPanel>
+		</StackPanel>
+	</ScrollViewer>
+</UserControl>

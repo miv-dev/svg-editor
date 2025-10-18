@@ -5,40 +5,38 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI;
 
 namespace svg_editor.Models
 {
-    public abstract record Shape(Guid Id, ShapeType Kind, ShapeStyle Style, string Name);
+    public abstract class ShapeModel
+    {
+        public Vector2 Position { get; set; } = new(100, 100);
+        public float Width { get; set; } = 150;
+        public float Height { get; set; } = 100;
 
-    public record RectShape(Guid Id, double X, double Y, double W, double H, ShapeStyle Style, string Name)
-      : Shape(Id, ShapeType.Rect, Style, Name);
+        public Color Fill { get; set; } = Colors.White;
+        public Color Stroke { get; set; } = Colors.Black;
+        public float StrokeWidth { get; set; } = 2;
 
-    public record EllipseShape(Guid Id, double Cx, double Cy, double Rx, double Ry, ShapeStyle Style, string Name)
-      : Shape(Id, ShapeType.Ellipse, Style, Name);
+        public abstract string Kind { get; }
+    }
 
-    public record LineShape(Guid Id, double X1, double Y1, double X2, double Y2, ShapeStyle Style, string Name)
-      : Shape(Id, ShapeType.Line, Style, Name);
+    public sealed class RectangleModel : ShapeModel
+    {
+        public float RadiusX { get; set; } = 4;
+        public float RadiusY { get; set; } = 4;
+        public override string Kind => "rect";
+    }
 
-    public record PolyShape(Guid Id, Vector2[] Points, bool Closed, ShapeStyle Style, string Name)
-      : Shape(Id, Closed ? ShapeType.Polygon : ShapeType.Polyline, Style, Name);
+    public sealed class EllipseModel : ShapeModel
+    {
+        public override string Kind => "ellipse";
+    }
 
-    public record PathShape(Guid Id, string D, ShapeStyle Style, string Name)
-      : Shape(Id, ShapeType.Path, Style, Name);
-
-    public record RawShape(
-        Guid Id,
-        string Xml,
-        double? X, double? Y,
-        double? W, double? H,
-        ShapeStyle Style, string Name
-    ) : Shape(Id, ShapeType.Raw, Style, Name);
-
-    public enum ShapeType { Rect, Ellipse, Line, Polyline, Polygon, Path, Raw }
-
-    public record ShapeStyle(
-        uint? FillArgb = 0xFFFFFFFF,    // null => no fill
-        uint? StrokeArgb = 0xFF222222,  // null => no stroke
-        float StrokeWidth = 1.5f,
-        float[]? Dashes = null
-    );
+    public sealed class TriangleModel : ShapeModel
+    {
+        // Equilateral-ish triangle inside Width/Height at Position
+        public override string Kind => "triangle";
+    }
 }

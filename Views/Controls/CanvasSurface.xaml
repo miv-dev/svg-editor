@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="svg_editor.Views.Controls.CanvasSurface"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:svg_editor.Views.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:win2d="using:Microsoft.Graphics.Canvas.UI.Xaml"
+	mc:Ignorable="d">
+
+
+	<Grid Background="#F3F3F3">
+		<ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+			<Border x:Name="Paper"
+                    Background="White"
+                    BorderBrush="#DDDDDD"
+                    BorderThickness="1">
+				<win2d:CanvasControl x:Name="Win2D"
+                                     Draw="Win2D_Draw"
+                                     PointerPressed="Win2D_PointerPressed"/>
+			</Border>
+		</ScrollViewer>
+	</Grid>
+</UserControl>

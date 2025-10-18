@@ -10,8 +10,6 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
 
-        RootGrid.DataContext = App.GetService<AppState>();
-
         RootFrame.Navigate(typeof(HomePage));
 
     }

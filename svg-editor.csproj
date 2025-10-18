@@ -13,10 +13,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Controls\CanvasView.xaml" />
-    <None Remove="Controls\ShapeAttributeEditor.xaml" />
-    <None Remove="Controls\Sidebar.xaml" />
-    <None Remove="Controls\ToolBar.xaml" />
+    <None Remove="Views\Controls\CanvasSurface.xaml" />
+    <None Remove="Views\Controls\Sidebar.xaml" />
     <None Remove="Views\Pages\HomePage.xaml" />
   </ItemGroup>
 
@@ -51,27 +49,17 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250907003" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Controls\ShapeAttributeEditor.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Controls\Sidebar.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Controls\ToolBar.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Controls\CanvasView.xaml">
+    <Page Update="Views\Controls\Sidebar.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\Pages\HomePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Controls\CanvasSurface.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

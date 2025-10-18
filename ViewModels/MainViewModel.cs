@@ -2,58 +2,136 @@
 using CommunityToolkit.Mvvm.Input;
 using svg_editor.Models;
 using svg_editor.Services;
+using svg_editor.Services.Commands;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 
 namespace svg_editor.ViewModels
 {
-    public partial class MainViewModel :ObservableObject
+    public partial class MainViewModel : ObservableObject
     {
-
         public SvgStore Store { get; }
+        public AppState AppState { get; }
+        public CommandManager Commands { get; }
 
-        public MainViewModel(SvgStore store) {
-
+        public MainViewModel(SvgStore store, AppState appState, CommandManager cmdMgr)
+        {
             Store = store;
-            if (!store.HasArtboard)
-            {
-                NewArtboard();
+            AppState = appState;
+            Commands = cmdMgr;
 
-            }
+            Commands.Changed += (_, __) =>
+            {
+                UndoCommand.NotifyCanExecuteChanged();
+                RedoCommand.NotifyCanExecuteChanged();
+            };
         }
 
+        [RelayCommand]
+        private void NewDocument()
+        {
+            Store.Clear();
+            AppState.ResetTools();
+        }
 
-        [RelayCommand] private void NewArtboard() => Store.NewArtboard(1200, 800);
+        [RelayCommand] private void SetModeView() => AppState.Mode = EditorMode.View;
+        [RelayCommand] private void SetModeEdit() => AppState.Mode = EditorMode.Edit;
+
+        [RelayCommand] private void UseRect() => AppState.ActiveTool = Tool.Rectangle;
+        [RelayCommand] private void UseEllipse() => AppState.ActiveTool = Tool.Ellipse;
+        [RelayCommand] private void UseTriangle() => AppState.ActiveTool = Tool.Triangle;
+
+        [RelayCommand(CanExecute = nameof(CanUndo))] private void Undo() => Commands.Undo();
+        [RelayCommand(CanExecute = nameof(CanRedo))] private void Redo() => Commands.Redo();
+        private bool CanUndo() => Commands.CanUndo;
+        private bool CanRedo() => Commands.CanRedo;
+
+        public void OnCanvasTapped(float x, float y)
+        {
+            if (AppState.Mode != EditorMode.Edit) return;
+
+            ShapeModel shape = AppState.ActiveTool switch
+            {
+                Tool.Rectangle => new RectangleModel { Position = new(x - 75, y - 50) },
+                Tool.Ellipse => new EllipseModel { Position = new(x - 60, y - 60), Width = 120, Height = 120 },
+                Tool.Triangle => new TriangleModel { Position = new(x - 70, y - 60), Width = 140, Height = 120 },
+                _ => null!
+            };
+            if (shape == null) return;
+
+            Commands.Do(new AddShapeCommand(Store, shape));
+        }
 
         [RelayCommand]
-        private void AddRect()
-            => Store.AddRect(100, 100, 220, 140, new ShapeStyle(0xFFFFE08A, 0xFFAA7700, 2f));
+        private void LoadDemo()
+        {
+            Store.Clear();
+            Store.SetCanvas(1600, 1200);
+            Commands.Do(new AddShapeCommand(Store, new RectangleModel { Position = new(260, 220), Width = 300, Height = 160 }));
+            Commands.Do(new AddShapeCommand(Store, new EllipseModel { Position = new(900, 420), Width = 180, Height = 180 }));
+            Commands.Do(new AddShapeCommand(Store, new TriangleModel { Position = new(520, 700), Width = 280, Height = 160 }));
+            AppState.Mode = EditorMode.View;
+            AppState.ResetTools();
+        }
 
         [RelayCommand]
-        private void AddEllipse()
-            => Store.AddEllipse(520, 240, 120, 80, new ShapeStyle(0xFFCCEEFF, 0xFF1E88E5, 2f, new float[] { 6, 3 }));
+        private async void SaveSvg()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"""<svg xmlns="http://www.w3.org/2000/svg" width="{Store.CanvasWidth}" height="{Store.CanvasHeight}">""");
 
-        [RelayCommand]
-        private void AddLine()
-            => Store.AddLine(200, 420, 620, 360, new ShapeStyle(null, 0xFF0D47A1, 3f));
+            foreach (var s in Store.Shapes)
+            {
+                string fill = $"rgb({s.Fill.R},{s.Fill.G},{s.Fill.B})";
+                string stroke = $"rgb({s.Stroke.R},{s.Stroke.G},{s.Stroke.B})";
+                if (s is RectangleModel r)
+                {
+                    sb.AppendLine($"""  <rect x="{r.Position.X}" y="{r.Position.Y}" width="{r.Width}" height="{r.Height}" rx="{r.RadiusX}" ry="{r.RadiusY}" fill="{fill}" stroke="{stroke}" stroke-width="{r.StrokeWidth}"/>""");
+                }
+                else if (s is EllipseModel e)
+                {
+                    var cx = e.Position.X + e.Width / 2f;
+                    var cy = e.Position.Y + e.Height / 2f;
+                    sb.AppendLine($"""  <ellipse cx="{cx}" cy="{cy}" rx="{e.Width / 2f}" ry="{e.Height / 2f}" fill="{fill}" stroke="{stroke}" stroke-width="{e.StrokeWidth}"/>""");
+                }
+                else if (s is TriangleModel t)
+                {
+                    var x1 = t.Position.X + t.Width / 2f;
+                    var y1 = t.Position.Y;
+                    var x2 = t.Position.X;
+                    var y2 = t.Position.Y + t.Height;
+                    var x3 = t.Position.X + t.Width;
+                    var y3 = t.Position.Y + t.Height;
+                    sb.AppendLine($"""  <polygon points="{x1},{y1} {x2},{y2} {x3},{y3}" fill="{fill}" stroke="{stroke}" stroke-width="{t.StrokeWidth}"/>""");
+                }
+            }
 
-        [RelayCommand]
-        private void AddPolyline()
-            => Store.AddPolyline(new[] { new Vector2(700, 120), new(760, 180), new(720, 230), new(660, 180) },
-                                 new ShapeStyle(null, 0xFF388E3C, 2f));
+            sb.AppendLine("</svg>");
 
-        [RelayCommand]
-        private void AddPolygon()
-            => Store.AddPolygon(new[] { new Vector2(820, 120), new(900, 220), new(740, 220) },
-                                new ShapeStyle(0xFFA5D6A7, 0xFF2E7D32, 2f));
+            // Open a Save File Picker
+            var picker = new FileSavePicker
+            {
+                SuggestedFileName = "scene",
+                DefaultFileExtension = ".svg",
+                SuggestedStartLocation = PickerLocationId.Desktop
+            };
+            picker.FileTypeChoices.Add("SVG Files", new List<string> { ".svg" });
 
-        [RelayCommand]
-        private void AddPath()
-            => Store.AddPath("M 60 60 L 180 60 120 160 Z",
-                             new ShapeStyle(0xFFB3CFFF, 0xFF1A237E, 2f));
+            // Show the Save File Dialog
+            var file = await picker.PickSaveFileAsync();
+
+            if (file != null)
+            {
+                // Write the content to the selected file
+                await FileIO.WriteTextAsync(file, sb.ToString());
+            }
+        }
     }
 }

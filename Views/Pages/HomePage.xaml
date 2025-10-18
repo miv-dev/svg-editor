@@ -6,7 +6,7 @@
     xmlns:local="using:svg_editor.Views.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-	xmlns:controls="using:svg_editor.Controls"
+	xmlns:controls="using:svg_editor.Views.Controls"
 	mc:Ignorable="d">
 
 	<Grid Padding="4">
@@ -26,9 +26,7 @@
 		<controls:Sidebar Grid.Column="0" Grid.RowSpan="2" />
 
 
-		<controls:CanvasView Grid.ColumnSpan="4" Grid.Column="1" Grid.RowSpan="2"/>
-		<controls:ToolBar Grid.Column="2" Grid.Row="1"/>
-
-		<controls:ShapeAttributeEditor Grid.Column="4" Grid.RowSpan="2"/>
+		<controls:CanvasSurface Grid.ColumnSpan="4" Grid.Column="1" Grid.RowSpan="2"/>
+		
 	</Grid>
 </Page>
