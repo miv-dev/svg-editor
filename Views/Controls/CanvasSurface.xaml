@@ -19,6 +19,8 @@
                     BorderThickness="1">
 				<win2d:CanvasControl x:Name="Win2D"
                                      Draw="Win2D_Draw"
+									 DoubleTapped="Win2D_DoubleTapped"
+									
                                      PointerPressed="Win2D_PointerPressed"/>
 			</Border>
 		</ScrollViewer>

@@ -1,4 +1,5 @@
-﻿using Microsoft.UI;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,34 +10,34 @@ using Windows.UI;
 
 namespace svg_editor.Models
 {
-    public abstract class ShapeModel
+    public abstract partial class ShapeModel : ObservableObject
     {
-        public Vector2 Position { get; set; } = new(100, 100);
-        public float Width { get; set; } = 150;
-        public float Height { get; set; } = 100;
+        [ObservableProperty] private Vector2 position = new(100, 100);
+        [ObservableProperty] private float width = 150;
+        [ObservableProperty] private float height = 100;
 
-        public Color Fill { get; set; } = Colors.White;
-        public Color Stroke { get; set; } = Colors.Black;
-        public float StrokeWidth { get; set; } = 2;
+        [ObservableProperty] private Color fill = Colors.White;
+        [ObservableProperty] private Color stroke = Colors.Black;
+        [ObservableProperty] private float strokeWidth = 2;
 
         public abstract string Kind { get; }
     }
 
-    public sealed class RectangleModel : ShapeModel
+
+    public sealed partial class RectangleModel : ShapeModel
     {
-        public float RadiusX { get; set; } = 4;
-        public float RadiusY { get; set; } = 4;
+        [ObservableProperty] private float radiusX = 4;
+        [ObservableProperty] private float radiusY = 4;
         public override string Kind => "rect";
     }
 
-    public sealed class EllipseModel : ShapeModel
+    public sealed partial class EllipseModel : ShapeModel
     {
         public override string Kind => "ellipse";
     }
 
-    public sealed class TriangleModel : ShapeModel
+    public sealed partial class TriangleModel : ShapeModel
     {
-        // Equilateral-ish triangle inside Width/Height at Position
         public override string Kind => "triangle";
     }
 }

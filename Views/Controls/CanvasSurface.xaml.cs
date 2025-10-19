@@ -90,82 +90,94 @@ namespace svg_editor.Views.Controls
             var pt = e.GetCurrentPoint(Win2D);
             if (!pt.Properties.IsLeftButtonPressed) return;
 
-            VM.OnCanvasTapped((float)pt.Position.X, (float)pt.Position.Y);
-            // VM issues command -> store changes -> Invalidate via event
+            // Single-click: if in EDIT mode with tool selected -> add shape
+            if (AppState.Mode == EditorMode.Edit && AppState.ActiveTool != Tool.None)
+            {
+                VM.OnCanvasTapped((float)pt.Position.X, (float)pt.Position.Y);
+                return;
+            }
+
+            // Single-click without tool: select top-most shape
+            var pos = new Vector2((float)pt.Position.X, (float)pt.Position.Y);
+            var top = Store.HitTestTop(pos);
+            Store.SetSelected(top);
         }
+
+
 
         // === Win2D Render ===
         private void Win2D_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
             var ds = args.DrawingSession;
 
-            // Optional: light checkerboard or grid could be drawn here
-
-            // Render every shape from the store
             foreach (var s in Store.Shapes)
             {
-                // Brushes: Win2D uses Colors directly; stroke widths are float
-                var fill = s.Fill;   // Windows.UI.Color
+                var fill = s.Fill;
                 var stroke = s.Stroke;
+                var strokeWidth = s.StrokeWidth;
 
+                using var style = new CanvasStrokeStyle()
+                {
+                    LineJoin = CanvasLineJoin.Miter
+                };
+
+                // Draw
                 if (s is RectangleModel r)
                 {
                     var rect = new Rect(r.Position.X, r.Position.Y, r.Width, r.Height);
-
                     if (r.RadiusX > 0 || r.RadiusY > 0)
                     {
                         using var geo = CanvasGeometry.CreateRoundedRectangle(
-                            sender.Device,
-                            (float)rect.X, (float)rect.Y,
+                            sender.Device, (float)rect.X, (float)rect.Y,
                             (float)rect.Width, (float)rect.Height,
                             r.RadiusX, r.RadiusY);
-
                         ds.FillGeometry(geo, fill);
-                        if (r.StrokeWidth > 0)
-                            ds.DrawGeometry(geo, stroke, r.StrokeWidth);
+                        if (strokeWidth > 0) ds.DrawGeometry(geo, stroke, strokeWidth, style);
                     }
                     else
                     {
                         ds.FillRectangle(rect, fill);
-                        if (r.StrokeWidth > 0)
-                            ds.DrawRectangle(rect, stroke, r.StrokeWidth);
+                        if (strokeWidth > 0) ds.DrawRectangle(rect, stroke, strokeWidth, style);
                     }
                 }
                 else if (s is EllipseModel e)
                 {
                     var center = new Vector2(e.Position.X + e.Width / 2f, e.Position.Y + e.Height / 2f);
-                    var radiusX = e.Width / 2f;
-                    var radiusY = e.Height / 2f;
-
-                    using var geo = CanvasGeometry.CreateEllipse(sender.Device, center, radiusX, radiusY);
-
+                    using var geo = CanvasGeometry.CreateEllipse(sender.Device, center, e.Width / 2f, e.Height / 2f);
                     ds.FillGeometry(geo, fill);
-                    if (e.StrokeWidth > 0)
-                        ds.DrawGeometry(geo, stroke, e.StrokeWidth);
+                    if (strokeWidth > 0) ds.DrawGeometry(geo, stroke, strokeWidth, style);
                 }
                 else if (s is TriangleModel t)
                 {
-                    // Isosceles triangle inside its bounds: (top, bottom-left, bottom-right)
                     var p1 = new Vector2(t.Position.X + t.Width / 2f, t.Position.Y);
                     var p2 = new Vector2(t.Position.X, t.Position.Y + t.Height);
                     var p3 = new Vector2(t.Position.X + t.Width, t.Position.Y + t.Height);
-
-                    using var path = new CanvasPathBuilder(sender.Device);
-                    path.BeginFigure(p1);
-                    path.AddLine(p2);
-                    path.AddLine(p3);
-                    path.EndFigure(CanvasFigureLoop.Closed);
-
-                    using var geo = CanvasGeometry.CreatePath(path);
-
+                    using var pb = new CanvasPathBuilder(sender.Device);
+                    pb.BeginFigure(p1); pb.AddLine(p2); pb.AddLine(p3); pb.EndFigure(CanvasFigureLoop.Closed);
+                    using var geo = CanvasGeometry.CreatePath(pb);
                     ds.FillGeometry(geo, fill);
-                    if (t.StrokeWidth > 0)
-                        ds.DrawGeometry(geo, stroke, t.StrokeWidth);
+                    if (strokeWidth > 0) ds.DrawGeometry(geo, stroke, strokeWidth, style);
+                }
+
+                // Selection highlight overlay
+                if (s == Store.Selected)
+                {
+                    // dashed outline around the bounds
+                    using var selStyle = new CanvasStrokeStyle
+                    {
+                        DashStyle = CanvasDashStyle.Dash,
+                        LineJoin = CanvasLineJoin.Miter
+                    };
+                    var bounds = new Rect(s.Position.X - 4, s.Position.Y - 4, s.Width + 8, s.Height + 8);
+                    ds.DrawRectangle(bounds, Color.FromArgb(255, 0, 120, 215), 1.5f, selStyle);
                 }
             }
+        }
 
-            // Optional visual cue: draw a border around the paper
-            ds.DrawRectangle(new Rect(0, 0, Store.CanvasWidth, Store.CanvasHeight), Color.FromArgb(255, 220, 220, 220), 1f);
+        private void Win2D_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            var p = e.GetPosition(Win2D);
+            Store.SelectNextAt(new Vector2((float)p.X, (float)p.Y));
         }
     }
 }
