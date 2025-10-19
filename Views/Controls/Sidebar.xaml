@@ -5,8 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:svg_editor.Views.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:viewmodels="using:svg_editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:MainViewModel}"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:viewmodels="using:svg_editor.ViewModels" xmlns:models="using:svg_editor.Models" xmlns:utils="using:svg_editor.Utils" d:DataContext="{d:DesignInstance Type=viewmodels:MainViewModel}"
 	mc:Ignorable="d">
+	<UserControl.Resources>
+		<utils:FloatDoubleConverter x:Key="FloatDoubleConverter"/>
+	</UserControl.Resources>
+
 
 	<ScrollViewer>
 		<StackPanel Padding="12" Spacing="16">
@@ -44,7 +48,53 @@
 				<StackPanel Spacing="4">
 					<TextBlock Text="Размер:" FontWeight="SemiBold"/>
 					<TextBlock Text="{Binding Store.CanvasWidth}"/>
-					<TextBlock Text="{Binding Store.CanvasHeigh}"/>
+					<TextBlock Text="{Binding Store.CanvasHeight}"/>
+				</StackPanel>
+			</Border>
+			<Border CornerRadius="6" Padding="12" BorderBrush="#DDD" BorderThickness="1">
+				<StackPanel Spacing="10">
+					<TextBlock Text="Shape Properties" FontWeight="SemiBold"/>
+
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<TextBlock Text="Selected:" Width="90"/>
+						<TextBlock Text="{Binding Store.Selected.Kind, FallbackValue=none}"/>
+					</StackPanel>
+
+					<StackPanel Spacing="4">
+						<TextBlock Text="Width"/>
+						<NumberBox Minimum="0"
+               Value="{Binding Store.Selected.Width, Mode=TwoWay, Converter={StaticResource FloatDoubleConverter}}"/>
+					</StackPanel>
+
+					<StackPanel Spacing="4">
+						<TextBlock Text="Height"/>
+						<NumberBox Minimum="0"
+               Value="{Binding Store.Selected.Height, Mode=TwoWay, Converter={StaticResource FloatDoubleConverter}}"/>
+					</StackPanel>
+
+					<!-- Fill -->
+					<StackPanel Spacing="4">
+						<TextBlock Text="Fill"/>
+						<ColorPicker Color="{Binding Store.Selected.Fill, Mode=TwoWay}" 
+                                     IsColorSpectrumVisible="False"
+                                     IsAlphaEnabled="False"/>
+					</StackPanel>
+
+					<!-- Stroke -->
+					<StackPanel Spacing="4">
+						<TextBlock Text="Stroke"/>
+						<ColorPicker Color="{Binding Store.Selected.Stroke, Mode=TwoWay}" 
+                                     IsColorSpectrumVisible="False"
+                                     IsAlphaEnabled="False"/>
+					</StackPanel>
+
+					<!-- Stroke Width -->
+					<StackPanel Spacing="4">
+						<TextBlock Text="Stroke Width"/>
+						<NumberBox Minimum="0" Maximum="50"
+                                   Value="{Binding Store.Selected.StrokeWidth, Mode=TwoWay, Converter={StaticResource FloatDoubleConverter}}"/>
+					</StackPanel>
+
 				</StackPanel>
 			</Border>
 
