@@ -1,4 +1,5 @@
 using Microsoft.Graphics.Canvas.Geometry;
+using Microsoft.Graphics.Canvas.Svg;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -27,6 +28,9 @@ namespace svg_editor.Views.Controls
 {
     public sealed partial class CanvasSurface : UserControl
     {
+
+        private CanvasSvgDocument? _cachedUnsupportedDoc;
+        private string? _cachedUnsupportedXml;
         private MainViewModel VM => (MainViewModel)DataContext!;
         private SvgStore Store => VM.Store;
         private AppState AppState => VM.AppState;
@@ -81,6 +85,14 @@ namespace svg_editor.Views.Controls
             Win2D.Width = Store.CanvasWidth;
             Win2D.Height = Store.CanvasHeight;
 
+            // если поменялся xml «неподдержанного», сбросим кэш
+            if (Store.UnsupportedSvgXml != _cachedUnsupportedXml)
+            {
+                _cachedUnsupportedXml = Store.UnsupportedSvgXml;
+                _cachedUnsupportedDoc?.Dispose();
+                _cachedUnsupportedDoc = null;
+            }
+
             Win2D.Invalidate();
         }
 
@@ -109,6 +121,28 @@ namespace svg_editor.Views.Controls
         private void Win2D_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
             var ds = args.DrawingSession;
+
+
+            if (!string.IsNullOrWhiteSpace(Store.UnsupportedSvgXml))
+            {
+                if (_cachedUnsupportedDoc == null)
+                {
+                    try
+                    {
+                        _cachedUnsupportedDoc = CanvasSvgDocument.LoadFromXml(sender.Device, Store.UnsupportedSvgXml);
+                    }
+                    catch
+                    {
+                        // Если svg слишком сложный — тишина; можно вывести плашку-текст
+                    }
+                }
+
+                if (_cachedUnsupportedDoc != null)
+                {
+                    // Рисуем в размерах полотна
+                    ds.DrawSvg(_cachedUnsupportedDoc, new Size(Store.CanvasWidth, Store.CanvasHeight));
+                }
+            }
 
             foreach (var s in Store.Shapes)
             {

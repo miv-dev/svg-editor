@@ -61,5 +61,29 @@ namespace svg_editor.Views.Controls
 
             _ = SaveFileAsync(svg);
         }
+
+        public async Task OpenFile()
+        {
+            WindowId windowId = App.Window.AppWindow.Id;
+
+
+            var picker = new FileOpenPicker(windowId);
+            picker.FileTypeFilter.Add(".svg");
+            picker.SuggestedStartLocation = PickerLocationId.Desktop;
+
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null) return;
+
+            string xml = File.ReadAllText(file.Path);
+
+            VM.ImportSvg(xml);
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            
+            _ = OpenFile();
+        }
     }
 }

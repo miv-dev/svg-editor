@@ -13,6 +13,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
@@ -85,41 +86,88 @@ namespace svg_editor.ViewModels
         }
 
 
-        public String GetSvg()
+        public string GetSvg()
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"""<svg xmlns="http://www.w3.org/2000/svg" width="{Store.CanvasWidth}" height="{Store.CanvasHeight}">""");
+
+            // ширину/высоту можно оставить целыми (у вас уже Convert.ToInt32),
+            // либо прогнать через MathUtils.Fmt, если DECIMALS > 0.
+            sb.AppendLine($"""<svg xmlns="http://www.w3.org/2000/svg" width="{Convert.ToInt32(Store.CanvasWidth)}" height="{Convert.ToInt32(Store.CanvasHeight)}">""");
+
+            // 1) Вклеим «остатки» (если нужно) ПЕРЕД нашими фигурами — как фоновый слой
+            if (!string.IsNullOrWhiteSpace(Store.UnsupportedSvgXml))
+            {
+                sb.AppendLine(@"  <!-- Unsupported original SVG content (not editable) -->");
+                sb.AppendLine(@"  <g id=""unsupported"" data-svg-editor=""unsupported"">");
+
+                foreach (var el in UnsupportedXmlHelper.ExtractElements(Store.UnsupportedSvgXml))
+                {
+                    // Вставляем как есть, без переоформления (оставляем xmlns, стили и пр.)
+                    sb.AppendLine("    " + el.ToString(SaveOptions.DisableFormatting));
+                }
+
+                sb.AppendLine(@"  </g>");
+            }
+
 
             foreach (var s in Store.Shapes)
             {
                 string fill = $"rgb({s.Fill.R},{s.Fill.G},{s.Fill.B})";
                 string stroke = $"rgb({s.Stroke.R},{s.Stroke.G},{s.Stroke.B})";
+                string sw = MathUtils.Fmt(s.StrokeWidth);
+
                 if (s is RectangleModel r)
                 {
-                    sb.AppendLine($"""  <rect x="{r.Position.X}" y="{r.Position.Y}" width="{r.Width}" height="{r.Height}" rx="{r.RadiusX}" ry="{r.RadiusY}" fill="{fill}" stroke="{stroke}" stroke-width="{r.StrokeWidth}"/>""");
+                    sb.AppendLine(
+                        $"""  <rect x="{MathUtils.Fmt(r.Position.X)}" y="{MathUtils.Fmt(r.Position.Y)}" width="{MathUtils.Fmt(r.Width)}" height="{MathUtils.Fmt(r.Height)}" rx="{MathUtils.Fmt(r.RadiusX)}" ry="{MathUtils.Fmt(r.RadiusY)}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>""");
                 }
                 else if (s is EllipseModel e)
                 {
                     var cx = e.Position.X + e.Width / 2f;
                     var cy = e.Position.Y + e.Height / 2f;
-                    sb.AppendLine($"""  <ellipse cx="{cx}" cy="{cy}" rx="{e.Width / 2f}" ry="{e.Height / 2f}" fill="{fill}" stroke="{stroke}" stroke-width="{e.StrokeWidth}"/>""");
+                    var rx = e.Width / 2f;
+                    var ry = e.Height / 2f;
+
+                    sb.AppendLine(
+                        $"""  <ellipse cx="{MathUtils.Fmt(cx)}" cy="{MathUtils.Fmt(cy)}" rx="{MathUtils.Fmt(rx)}" ry="{MathUtils.Fmt(ry)}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>""");
                 }
                 else if (s is TriangleModel t)
                 {
-                    var x1 = t.Position.X + t.Width / 2f;
-                    var y1 = t.Position.Y;
-                    var x2 = t.Position.X;
-                    var y2 = t.Position.Y + t.Height;
-                    var x3 = t.Position.X + t.Width;
-                    var y3 = t.Position.Y + t.Height;
-                    sb.AppendLine($"""  <polygon points="{x1},{y1} {x2},{y2} {x3},{y3}" fill="{fill}" stroke="{stroke}" stroke-width="{t.StrokeWidth}"/>""");
+                    var x1 = t.Position.X + t.Width / 2f; var y1 = t.Position.Y;
+                    var x2 = t.Position.X; var y2 = t.Position.Y + t.Height;
+                    var x3 = t.Position.X + t.Width; var y3 = t.Position.Y + t.Height;
+
+                    sb.AppendLine(
+                        $"""  <polygon points="{MathUtils.Fmt(x1)},{MathUtils.Fmt(y1)} {MathUtils.Fmt(x2)},{MathUtils.Fmt(y2)} {MathUtils.Fmt(x3)},{MathUtils.Fmt(y3)}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>""");
                 }
             }
 
             sb.AppendLine("</svg>");
-
             return sb.ToString();
         }
-       
+
+        public void ImportSvg(string svgContent)
+        {
+            SvgImportResult res;
+            try
+            {
+                res = SvgImporter.Parse(svgContent);
+            }
+            catch (Exception ex)
+            {
+                // Сообщите пользователю любым способом — здесь просто очистим и выйдем
+                return;
+            }
+
+            Store.Clear();
+            if (res.Width.HasValue && res.Height.HasValue)
+                Store.SetCanvas(res.Width.Value, res.Height.Value);
+
+            foreach (var r in res.Rects) Store.Add(r);
+            foreach (var e in res.Ellipses) Store.Add(e);
+            foreach (var t in res.Triangles) Store.Add(t);
+
+            Store.UnsupportedSvgXml = res.UnsupportedSvgXml;
+        }
     }
 }

@@ -27,6 +27,9 @@ namespace svg_editor.Services
         // ВАЖНО: Selected с уведомлением INotifyPropertyChanged
         [ObservableProperty] private ShapeModel? selected;
 
+        // Сырой SVG с НЕподдержанными узлами — рисуем отдельным слоем (не выделяемый)
+        [ObservableProperty] private string? unsupportedSvgXml;
+
         // Удобные производные проперти для XAML (чтобы не делать касты в разметке)
         public bool IsRectSelected => Selected is RectangleModel;
         public RectangleModel? SelectedRect => Selected as RectangleModel;
